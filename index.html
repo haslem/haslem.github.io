@@ -1,0 +1,639 @@
+<! DOCTYPE html>
+
+<html>
+
+	<head>
+	
+		<link rel="stylesheet" href="lib/leaflet.css"/>
+		<link rel="stylesheet" href="lib/leaflet.groupedlayercontrol.css"/>
+		
+		
+		<script src ="lib/leaflet.js"></script>
+		<script src ="lib/leaflet.groupedlayercontrol.js"></script>
+		
+		
+		
+		<script src="data/state.geojson"></script>
+		<script src="data/hranice.geojson"></script>
+		<script src="data/okresy_2.geojson"></script>
+		<script src="data/orna.geojson"></script>
+		<script src="data/trva.geojson"></script>
+		<script src="data/les.geojson"></script>
+		
+		<style>
+			#mapid {height: 400px;}
+			.legend{background : white; line-height : 1.5em}
+            .legend i{width : 3em; float : left}
+			.info {
+					padding: 6px 8px;
+					font: 14px/16px Arial, Helvetica, sans-serif;
+					background: white;
+					background: rgba(255,255,255,0.8);
+					box-shadow: 0 0 15px rgba(0,0,0,0.2);
+					border-radius: 5px;
+				  }
+			.info h4 {
+				margin: 0 0 5px;
+				color: #777;
+			         }				  
+		</style>
+	
+	
+	</head>
+	
+	<body>
+	
+		<h1>Index změn a využití ploch</h1>
+		<div id = "mapid"></div>
+		
+		<script>
+		
+		
+		
+		/*var street = L.tileLayer( 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+		subdomains: ['a','b','c']
+		}).addTo(mymap);*/
+		
+		var mymap = L.map('mapid').setView([49.9, 15.00], 7);
+		
+		var black = L.tileLayer ('https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaGFzbGVtIiwiYSI6ImNpdzd6M2NodDAwMHcyb3BxZTZjMW5rdm0ifQ.72AdYl2QLZk1N0RWEhvniA');
+		
+		var white = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaGFzbGVtIiwiYSI6ImNpdzd6M2NodDAwMHcyb3BxZTZjMW5rdm0ifQ.72AdYl2QLZk1N0RWEhvniA').addTo(mymap);
+		
+		
+		
+		
+		
+		/*var mymap = L.map('mapid', {
+			center: [49.9, 15.00],
+			zoom: 7,
+			layers: [white, black]
+		});*/
+
+		
+		function getOkresyColor45(ind){
+				if(ind > 14.9){
+					return '#7a0177';
+					}
+					else if(ind > 11.7){
+					return '#c51b8a';
+					}
+					else if(ind > 8.6){
+					return '#f768a1';
+					}
+					else if(ind > 5.5){
+					return '#fbb4b9';
+					}
+					else{
+					return '#feebe2';
+					}
+			};
+			
+			
+			function getOrnaColor(ind){
+				if(ind > 52.6){
+					return '#a50f15';
+					}
+					else if(ind > 40.9){
+					return '#de2d26';
+					}
+					else if(ind > 29.2){
+					return '#fb6a4a';
+					}
+					else if(ind > 17.5){
+					return '#fcae91';
+					}
+					else{
+					return '#fee5d9';
+					}
+			};
+			
+			function getTrvaColor(ind){
+				if(ind > 9.8){
+					return '#993404';
+					}
+					else if(ind > 7.5){
+					return '#d95f0e';
+					}
+					else if(ind > 5.2){
+					return '#fe9929';
+					}
+					else if(ind > 2.9){
+					return '#fed98e';
+					}
+					else{
+					return '#ffffd4';
+					}
+			};
+			
+			function getLesColor(ind){
+				if(ind > 49.53){
+					return '#006d2c';
+					}
+					else if(ind > 39.57){
+					return '#2ca25f';
+					}
+					else if(ind > 29.60){
+					return '#66c2a4';
+					}
+					else if(ind > 19.64){
+					return '#b2e2e2';
+					}
+					else{
+					return '#edf8fb';
+					}
+			};
+			
+	
+			
+			
+		function okresyStyle45(feature){
+				return{
+					fillColor: getOkresyColor45(feature.properties.ind_45_10),
+					weight: 2,
+					opacity: 1,
+					color: '#636363',
+					dashArray:3,
+					fillOpacity: 0.7
+				}
+			
+			};
+			
+		function ornaStyle(feature){
+				return{
+					fillColor: getOrnaColor(feature.properties.or10),
+					weight: 2,
+					opacity: 1,
+					color: '#636363',
+					dashArray:3,
+					fillOpacity: 0.7
+				}
+			
+			};	
+			
+		function trvaStyle(feature){
+				return{
+					fillColor: getTrvaColor(feature.properties.tr10),
+					weight: 2,
+					opacity: 1,
+					color: '#636363',
+					dashArray:3,
+					fillOpacity: 0.7
+				}
+			
+			};	
+		
+		function lesStyle(feature){
+				return{
+					fillColor: getLesColor(feature.properties.ls10),
+					weight: 2,
+					opacity: 1,
+					color: '#636363',
+					dashArray:3,
+					fillOpacity: 0.7
+				}
+			
+			};	
+	
+
+		function highlightFeature(e){
+			var layer = e.target;
+			layer.setStyle(
+				{
+				weight : 5,
+				color : 'black',
+				fillColor : 'white',
+				fillOpacity : 0.2
+				}
+			);
+			
+			info.update(layer.feature.properties);
+		};
+		
+		function resetHighlightInd(e){
+			okresy.resetStyle(e.target);
+			info.update();
+		}
+		
+		function resetHighlightOrn(e){
+			orna.resetStyle(e.target);
+			info.update();
+		}
+		
+		function resetHighlightTrva(e){
+			trva.resetStyle(e.target);
+			info.update();
+		}
+		
+		function resetHighlightLes(e){
+			les.resetStyle(e.target);
+			info.update();
+		}
+
+		
+			
+			
+		function okresyOnEachFeature45 (feature, layer){
+		
+		<!--bind polygon to each feature in a layer -->
+		//layer.bindTooltip(feature.properties.ind_45_10.toString(), {noHide : true});
+		layer.bindTooltip(feature.properties.NAZEV + "   " + feature.properties.ind_45_10.toString(), {noHide : true});
+		
+			layer.on(
+				{
+					mouseover : highlightFeature,
+					mouseout : resetHighlightInd,
+					//click : zoomToFeature
+				}
+			)
+		};
+		
+		
+		function ornaOnEachFeature (feature, layer){
+		
+		<!--bind polygon to each feature in a layer -->
+		//layer.bindTooltip(feature.properties.or10.toString(), {noHide : true});
+		layer.bindTooltip(feature.properties.NAZEV +"   " + feature.properties.or10.toString(), {noHide : true});
+		
+			layer.on(
+				{
+					mouseover : highlightFeature,
+					mouseout : resetHighlightOrn,
+					//click : zoomToFeature
+				}
+			)
+		};
+		
+		function trvaOnEachFeature (feature, layer){
+		
+		<!--bind polygon to each feature in a layer -->
+		layer.bindTooltip(feature.properties.NAZEV +"   " + feature.properties.tr10.toString(), {noHide : true});
+		
+		
+			layer.on(
+				{
+					mouseover : highlightFeature,
+					mouseout : resetHighlightTrva,
+					//click : zoomToFeature
+				}
+			)
+		};
+		
+		function lesOnEachFeature (feature, layer){
+		
+		<!--bind polygon to each feature in a layer -->
+		layer.bindTooltip(feature.properties.NAZEV +"   " + feature.properties.ls10.toString(), {noHide : true});
+		
+		
+			layer.on(
+				{
+					mouseover : highlightFeature,
+					mouseout : resetHighlightLes,
+					//click : zoomToFeature
+				}
+			)
+		};
+		
+		
+		/*var okresy_style = 
+		{
+		
+		"color" : "red",
+		"weight": 1
+		
+		};*/
+		
+		var border = L.geoJson(
+			border,
+			{
+			color:'red',
+			weight: 3,
+			opacity: 1,
+			dashArray:1
+			}
+			).addTo(mymap);
+		
+		
+		var okresy = L.geoJson(
+			okresy,
+			{
+			style : okresyStyle45,
+			onEachFeature : okresyOnEachFeature45
+			}
+			).addTo(mymap);
+			
+		var orna = L.geoJson(
+			orna,
+			{
+			style : ornaStyle,
+			onEachFeature : ornaOnEachFeature
+			}
+			);
+
+		var trva = L.geoJson(
+			trva,
+			{
+			style : trvaStyle,
+			onEachFeature : trvaOnEachFeature
+			}
+			);
+
+		var les = L.geoJson(
+			les,
+			{
+			style : lesStyle,
+			onEachFeature : lesOnEachFeature
+			}
+			);		
+			
+		
+		<!--add legend-->
+			var legendIndex = L.control({position : 'bottomright'})
+		<!--every control should have onAdd method-->
+			legendIndex.onAdd = function(mymap){
+			var div = L.DomUtil.create('div', 'legend');
+			var labels =["14.93 - 18.05",
+			"11.80 - 14.92",
+			"8.67 - 11.79",
+			"5.54 - 8.66",
+			"2.40 - 5.53"
+			];
+			var grades = [14.93, 11.80, 8.67, 5.54, 2.40];
+			<!--add legend title-->
+			div.innerHTML = '<div><b>Index změn 1845 - 2010</b></div>';
+			
+
+			<!--iterate through grades and append labels to grade -->	
+			for (var i = 0; i < grades.length; i++)	{
+			div.innerHTML +=
+            '<i style="background:' + getOkresyColor45(grades[i]) + '">&nbsp;&nbsp;</i>&nbsp;&nbsp; ' +
+            labels[i] + '<br/>';
+			}
+			return div;	
+
+			
+			}
+			//
+			
+			
+			
+			var legendOrn = L.control({position : 'bottomright'})
+		<!--every control should have onAdd method-->
+			legendOrn.onAdd = function(mymap){
+			var div = L.DomUtil.create('div', 'legend');
+			var labels =["52.67 - 64.37",
+			"40.96 - 52.66",
+			"29.25 - 40.95",
+			"17.54 - 29.24",
+			"5.82 - 17.53"
+			];
+			var grades = [52.66, 40.95, 29.24, 17.53, 5.82];
+			<!--add legend title-->
+			div.innerHTML = '<div><b>Orní půda 2010, %</b></div>';
+			
+
+			<!--iterate through grades and append labels to grade -->	
+			for (var i = 0; i < grades.length; i++)	{
+			div.innerHTML +=
+            '<i style="background:' + getOrnaColor(grades[i]) + '">&nbsp;&nbsp;</i>&nbsp;&nbsp; ' +
+            labels[i] + '<br/>';
+			}
+			return div;	
+
+			
+			}
+			
+			
+			var legendTrva = L.control({position : 'bottomright'})
+		<!--every control should have onAdd method-->
+			legendTrva.onAdd = function(mymap){
+			var div = L.DomUtil.create('div', 'legend');
+			var labels =["9.81 - 12.11",
+			"7.56 - 9.80",
+			"5.25 - 7.57",
+			"2.94 - 5.24",
+			"0.60 - 2.93"
+			];
+			var grades = [9.81, 7.51, 5.21, 2.91, 0.62];
+			<!--add legend title-->
+			div.innerHTML = '<div><b>Trvalé kultury 2010, %</b></div>';
+			
+
+			<!--iterate through grades and append labels to grade -->	
+			for (var i = 0; i < grades.length; i++)	{
+			div.innerHTML +=
+            '<i style="background:' + getTrvaColor(grades[i]) + '">&nbsp;&nbsp;</i>&nbsp;&nbsp; ' +
+            labels[i] + '<br/>';
+			}
+			return div;	
+
+			
+			}
+			
+			
+			var legendLes = L.control({position : 'bottomright'})
+		<!--every control should have onAdd method-->
+			legendLes.onAdd = function(mymap){
+			var div = L.DomUtil.create('div', 'legend');
+			var labels =["49.53 - 59.49",
+			"39.57 - 49.52",
+			"29.60 - 39.56",
+			"19.64 - 29.59",
+			"9.68 - 19.64"
+			];
+			var grades = [49.54, 39.58, 29.61, 19.65, 9.69];
+			<!--add legend title-->
+			div.innerHTML = '<div><b>Lesní plochy 2010, %</b></div>';
+			
+
+			<!--iterate through grades and append labels to grade -->	
+			for (var i = 0; i < grades.length; i++)	{
+			div.innerHTML +=
+            '<i style="background:' + getLesColor(grades[i]) + '">&nbsp;&nbsp;</i>&nbsp;&nbsp; ' +
+            labels[i] + '<br/>';
+			}
+			return div;	
+
+			
+			}
+		
+			
+			
+			
+			
+			
+			
+			var baseMaps = {
+			"Whitescale": white,
+			"Grayscale": black
+			};
+			
+			var groupedOverlays = {
+			  "Vrstvy": {
+				"Index změn": okresy,
+				"Orná půda": orna,
+				"Trvalé kultury": trva,
+				"Lesní plochy": les
+			  }
+			};
+			
+			var options = {
+			  // Make the "Landmarks" group exclusive (use radio inputs)
+			  exclusiveGroups: ["Vrstvy"]
+			};
+			
+			L.control.groupedLayers(baseMaps, groupedOverlays, options).addTo(mymap);
+			
+			
+			
+			/*var baseMaps = {
+    
+					"Index": okresy,
+					"Orna": orna
+				};
+
+				var overlayMaps = {};
+
+
+
+				L.control.layers(baseMaps, overlayMaps).addTo(mymap);*/
+			
+			
+			
+			
+			legendIndex.addTo(mymap);
+			currentLegend = legendIndex;
+			
+			/*var overlayMaps = {
+				"Okresy": okresy,
+				"Orna": orna
+				//"cccc": border,
+			};
+			
+			L.control.layers(baseMaps, overlayMaps).addTo(mymap);*/
+			
+			
+			
+			
+			
+			//Custom control
+			var info = L.control({position : 'bottomleft'});
+
+			info.onAdd = function (mymap) {
+				this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+				this.update();
+				return this._div;
+			};
+
+			
+			
+			
+			
+			// method that we will use to update the control based on feature properties passed
+			info.update = function (okresy) {
+				this._div.innerHTML = '<h4>Index změn</h4>' + (okresy ?
+				
+					'<b>' + okresy.NAZEV + '</b><br />'
+					+'1845 - 2010 ' +'<b>' + okresy.ind_45_10 + '</b><br />' + '1948 - 2010 ' + '<b>' + okresy.ind_48_10 + '</b><br />'
+					+ '1990 - 2010 ' +'<b>' + okresy.ind_90_10 + '</b><br />' 
+					+ '2000 - 2010 ' +'<b>' + okresy.ind_00_10 + '</b><br />'
+					: 'Zvolte okres');
+			};
+
+			info.addTo(mymap);
+			currentControl = info;
+			
+			
+			mymap.on('overlayadd', function (eventLayer) {
+				if (eventLayer.name === 'Index změn') {
+					mymap.removeControl(currentLegend );
+					currentLegend = legendIndex;
+					legendIndex.addTo(mymap);
+					
+					mymap.removeControl(currentControl );
+					info.update = function (okresy) {
+					this._div.innerHTML = '<h4>Index změn</h4>' + (okresy ?
+				
+					'<b>' + okresy.NAZEV + '</b><br />'
+					+'1845 - 2010 ' +'<b>' + okresy.ind_45_10 + '</b><br />' + '1948 - 2010 ' + '<b>' + okresy.ind_48_10 + '</b><br />'
+					+ '1990 - 2010 ' +'<b>' + okresy.ind_90_10 + '</b><br />' 
+					+ '2000 - 2010 ' +'<b>' + okresy.ind_00_10 + '</b><br />'
+					: 'Zvolte okres');
+			};
+					currentControl = info;
+					info.addTo(mymap);
+					
+					
+					
+				}
+				else if  (eventLayer.name === 'Orná půda') {
+					mymap.removeControl(currentLegend );
+					currentLegend = legendOrn;
+					legendOrn.addTo(mymap);
+					
+					mymap.removeControl(currentControl );
+					info.update = function (okresy) {
+					this._div.innerHTML = '<h4>Orná půda, %</h4>' +  (okresy ?
+				
+					'<b>' + okresy.NAZEV + '</b><br />'
+					+'1845 ' +'<b>' + okresy.or45 + '</b><br />' + '1948 ' + '<b>' + okresy.or48 + '</b><br />'
+					+ '1990 ' +'<b>' + okresy.or90 + '</b><br />' 
+					+ '2000 ' +'<b>' + okresy.or00 + '</b><br />' 
+					+ '2010 ' +'<b>' + okresy.or10 + '</b><br />'
+					: 'Zvolte okres');
+			};
+					currentControl = info;
+					info.addTo(mymap);
+				}
+				
+				
+				else if  (eventLayer.name === 'Trvalé kultury') {
+					mymap.removeControl(currentLegend );
+					currentLegend = legendTrva;
+					legendTrva.addTo(mymap);
+					
+					mymap.removeControl(currentControl );
+					info.update = function (trva) {
+					this._div.innerHTML = '<h4>Trvalé kultury, %</h4>' +  (trva ?
+				
+					'<b>' + trva.NAZEV + '</b><br />'
+					+'1845 ' +'<b>' + trva.tr45 + '</b><br />' + '1948 ' + '<b>' + trva.tr48 + '</b><br />'
+					+ '1990 ' +'<b>' + trva.tr90 + '</b><br />' 
+					+ '2000 ' +'<b>' + trva.tr00 + '</b><br />' 
+					+ '2010 ' +'<b>' + trva.tr10 + '</b><br />'
+					: 'Zvolte okres');
+			};
+					currentControl = info;
+					info.addTo(mymap);
+				}
+				
+				else if  (eventLayer.name === 'Lesní plochy') {
+					mymap.removeControl(currentLegend );
+					currentLegend = legendLes;
+					legendLes.addTo(mymap);
+					
+					mymap.removeControl(currentControl );
+					info.update = function (les) {
+					this._div.innerHTML = '<h4>Lesní plochy, %</h4>' +  (les ?
+				
+					'<b>' + les.NAZEV + '</b><br />'
+					+'1845 ' +'<b>' + les.ls45 + '</b><br />' + '1948 ' + '<b>' + les.ls48 + '</b><br />'
+					+ '1990 ' +'<b>' + les.ls90 + '</b><br />' 
+					+ '2000 ' +'<b>' + les.ls00 + '</b><br />' 
+					+ '2010 ' +'<b>' + les.ls10 + '</b><br />'
+					: 'Zvolte okres');
+			};
+					currentControl = info;
+					info.addTo(mymap);
+				}
+				
+			  })
+			
+			
+		
+		</script>
+	
+	</body>
+
+</html>
